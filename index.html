@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Nurse Assistant Exam</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#f0f4f8;--surface:#fff;--header:#1a237e;
+--accent:#1565c0;--accent2:#0d47a1;--border:#d0d9e8;
+--text:#1a1a2e;--subtext:#555;--answered:#2e7d32;--marked:#6a1b9a;
+--marked-ans:#1565c0;--unattempted:#c62828;--not-visited:#607d8b;
+--option-hover:#e3eaf5;--option-sel:#bbdefb;--option-border:#1565c0;
+--footer-bg:#1a237e;--timer-warn:#e65100;
+--shadow:0 2px 12px rgba(26,35,126,.10);
+--online:#2e7d32;--offline:#c62828;--pending:#e65100;
+}
+body {
+    background: linear-gradient(135deg, var(--bg) 0%, #e0eaf5 100%);
+    background-attachment: fixed;
+}
+.dark{
+--bg:#0d1117;--surface:#161b22;--header:#0d1b4b;
+--accent:#42a5f5;--accent2:#1565c0;--border:#30363d;
+--text:#e6edf3;--subtext:#8b949e;--option-hover:#1f2a38;--option-sel:#1a3a5c;
+--footer-bg:#0d1b4b;--shadow:0 2px 12px rgba(0,0,0,.4);
+}
+.dark body {
+    background: linear-gradient(135deg, var(--bg) 0%, #1a2332 100%);
+    background-attachment: fixed;
+}
+html,body{height:100%;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;color:var(--text);transition:background .3s,color .3s}
+
+/* ===== CONSENT SCREEN ===== */
+#consent-page{
+  display:none;position:fixed;inset:0;z-index:900;
+  background:linear-gradient(135deg,#0d1b4b 0%,#1a237e 50%,#1565c0 100%);
+  align-items:flex-start;justify-content:center;padding:20px;
+  overflow-y:auto;
+}
+.consent-card{
+  background:#fff;border-radius:20px;padding:36px 32px;max-width:520px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);position:relative;overflow:visible;
+  animation:slideUp .4s ease;margin:auto;
+}
+.dark .consent-card{background:#161b22}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.consent-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#1a237e,#42a5f5,#e65100,#1a237e)}
+.consent-icon{font-size:3rem;text-align:center;margin-bottom:16px}
+.consent-title{font-size:1.3rem;font-weight:800;color:#1a237e;text-align:center;margin-bottom:8px}
+.dark .consent-title{color:#42a5f5}
+.consent-subtitle{font-size:.82rem;color:#607d8b;text-align:center;margin-bottom:20px}
+.consent-box{
+  background:#f0f4f8;border-radius:12px;padding:18px;margin-bottom:20px;
+  border-left:4px solid #1565c0;font-size:.9rem;line-height:1.6;color:#1a1a2e;
+}
+.dark .consent-box{background:#0d1117;color:#e6edf3;border-left-color:#42a5f5}
+.consent-data-list{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.consent-data-list span{font-size:.78rem;color:#555;display:flex;align-items:center;gap:5px}
+.dark .consent-data-list span{color:#8b949e}
+.consent-data-list span::before{content:'•';color:#1565c0;font-weight:900}
+.consent-check-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:20px;cursor:pointer;padding:10px;border-radius:8px;border:2px solid var(--border);transition:border-color .2s}
+.consent-check-row:hover{border-color:#1565c0}
+.consent-check-row.checked{border-color:#2e7d32;background:#f1f8f1}
+.dark .consent-check-row.checked{background:#1b2e1b}
+.consent-check-row input[type=checkbox]{width:18px;height:18px;flex-shrink:0;cursor:pointer;accent-color:#1565c0;margin-top:2px}
+.consent-check-label{font-size:.85rem;line-height:1.5;color:#1a1a2e;cursor:pointer}
+.dark .consent-check-label{color:#e6edf3}
+.consent-btns{display:flex;gap:10px}
+.consent-accept{flex:2;background:linear-gradient(135deg,#1a237e,#1565c0);color:#fff;border:none;border-radius:10px;padding:13px;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .2s;opacity:.5;pointer-events:none}
+.consent-accept.enabled{opacity:1;pointer-events:auto}
+.consent-accept.enabled:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(21,101,192,.4)}
+.consent-decline{flex:1;background:transparent;color:#607d8b;border:2px solid #d0d9e8;border-radius:10px;padding:13px;font-size:.9rem;font-weight:600;cursor:pointer;transition:all .2s}
+.consent-decline:hover{border-color:#c62828;color:#c62828}
+
+/* ===== REGISTRATION PAGE ===== */
+#reg-page{
+  display:none;flex-direction:column;min-height:100vh;
+  background:linear-gradient(135deg,#1a237e 0%,#1565c0 50%,#0d47a1 100%);
+  align-items:center;justify-content:center;padding:20px;
+}
+.reg-card{
+  background:#fff;border-radius:20px;padding:36px 32px;max-width:480px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative;overflow:hidden;
+  animation:slideUp .4s ease;
+}
+.dark .reg-card{background:#161b22;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.reg-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#1a237e,#42a5f5,#1a237e)}
+.reg-logo{text-align:center;margin-bottom:24px}
+.reg-logo-icon{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#1a237e,#1565c0);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:1.8rem;box-shadow:0 4px 16px rgba(21,101,192,.4)}
+.reg-logo h2{font-size:1.25rem;font-weight:800;color:#1a237e;line-height:1.3}
+.dark .reg-logo h2{color:#42a5f5}
+.reg-logo p{font-size:.8rem;color:#607d8b;margin-top:4px;font-weight:500}
+.reg-divider{height:1px;background:linear-gradient(90deg,transparent,#d0d9e8,transparent);margin:20px 0}
+.reg-field{margin-bottom:18px}
+.reg-label{display:block;font-size:.82rem;font-weight:700;color:#1a237e;margin-bottom:6px;letter-spacing:.03em}
+.dark .reg-label{color:#90caf9}
+.req-star{color:#c62828;margin-left:2px}
+.reg-input{width:100%;border:2px solid #d0d9e8;border-radius:10px;padding:12px 14px;font-size:.95rem;font-family:inherit;background:#f8fafc;color:#1a1a2e;transition:border-color .2s,box-shadow .2s;outline:none}
+.dark .reg-input{background:#0d1117;color:#e6edf3;border-color:#30363d}
+.reg-input:focus{border-color:#1565c0;box-shadow:0 0 0 3px rgba(21,101,192,.15);background:#fff}
+.dark .reg-input:focus{background:#161b22;box-shadow:0 0 0 3px rgba(66,165,245,.15)}
+.reg-input.error{border-color:#c62828;box-shadow:0 0 0 3px rgba(198,40,40,.12)}
+.reg-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231565c0' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer}
+.field-err{font-size:.75rem;color:#c62828;margin-top:5px;display:none;font-weight:600}
+.field-err.show{display:block}
+.opt-badge{font-size:.72rem;color:#607d8b;font-weight:500;margin-left:4px}
+.reg-btn{width:100%;background:linear-gradient(135deg,#1a237e,#1565c0);color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px;letter-spacing:.03em;box-shadow:0 4px 16px rgba(21,101,192,.3)}
+.reg-btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(21,101,192,.45)}
+.reg-footer-note{text-align:center;font-size:.75rem;color:#607d8b;margin-top:14px}
+
+/* Session recovery banner */
+.recovery-banner{
+  background:linear-gradient(135deg,#fff3e0,#ffe0b2);border-radius:12px;
+  padding:14px 16px;margin-bottom:20px;border-left:4px solid #e65100;display:none;
+}
+.dark .recovery-banner{background:linear-gradient(135deg,#2e1a00,#3e2400);border-left-color:#ff9800}
+.recovery-banner p{font-size:.85rem;color:#bf360c;font-weight:600;margin-bottom:8px}
+.dark .recovery-banner p{color:#ffb74d}
+.recovery-banner .rb-btns{display:flex;gap:8px}
+.rb-btn{border:none;border-radius:7px;padding:7px 14px;font-size:.8rem;font-weight:700;cursor:pointer}
+.rb-resume{background:#e65100;color:#fff}
+.rb-discard{background:#d0d9e8;color:#555}
+
+/* ===== RANGE SELECTION PAGE ===== */
+#range-page{
+  display:none;flex-direction:column;min-height:100vh;
+  background:linear-gradient(135deg,#1a237e 0%,#1565c0 50%,#0d47a1 100%);
+  align-items:center;justify-content:center;padding:20px;
+}
+.range-card{background:#fff;border-radius:20px;padding:32px;max-width:500px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative;overflow:hidden;animation:slideUp .4s ease}
+.dark .range-card{background:#161b22}
+.range-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#1a237e,#42a5f5,#1a237e)}
+.welcome-banner{background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border-radius:12px;padding:14px 16px;margin-bottom:22px;border-left:4px solid #2e7d32}
+.dark .welcome-banner{background:linear-gradient(135deg,#1b2e1b,#163016);border-left-color:#4caf50}
+.welcome-banner p{font-size:.88rem;color:#1b5e20;font-weight:600}
+.dark .welcome-banner p{color:#81c784}
+.welcome-banner span{font-weight:800}
+.range-title{font-size:1.15rem;font-weight:800;color:#1a237e;margin-bottom:6px}
+.dark .range-title{color:#42a5f5}
+.range-sub{font-size:.82rem;color:#607d8b;margin-bottom:20px}
+.range-options{display:flex;flex-direction:column;gap:10px;margin-bottom:22px}
+.range-opt{border:2px solid #d0d9e8;border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px}
+.range-opt:hover{border-color:#1565c0;background:#f0f4f8}
+.dark .range-opt{border-color:#30363d}.dark .range-opt:hover{background:#1f2a38;border-color:#42a5f5}
+.range-opt.selected{border-color:#1565c0;background:#e3f2fd}
+.dark .range-opt.selected{background:#1a3a5c;border-color:#42a5f5}
+.range-radio{width:20px;height:20px;border-radius:50%;border:2px solid #d0d9e8;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.range-opt.selected .range-radio{border-color:#1565c0;background:#1565c0}
+.range-opt.selected .range-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff}
+.range-opt-info strong{display:block;font-size:.92rem;font-weight:700;color:#1a1a2e}
+.dark .range-opt-info strong{color:#e6edf3}
+.range-opt-info span{font-size:.77rem;color:#607d8b}
+.custom-range-row{display:flex;gap:10px;margin-bottom:16px}
+.custom-range-row input{flex:1;border:2px solid #d0d9e8;border-radius:8px;padding:10px 12px;font-size:.9rem;font-family:inherit;background:#f8fafc;color:#1a1a2e;outline:none;transition:border-color .2s}
+.dark .custom-range-row input{background:#0d1117;color:#e6edf3;border-color:#30363d}
+.custom-range-row input:focus{border-color:#1565c0}
+.custom-range-row label{font-size:.78rem;font-weight:700;color:#1a237e;display:block;margin-bottom:4px}
+.dark .custom-range-row label{color:#90caf9}
+.start-btn{width:100%;background:linear-gradient(135deg,#2e7d32,#388e3c);color:#fff;border:none;border-radius:10px;padding:14px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(46,125,50,.3);letter-spacing:.03em}
+.start-btn:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(46,125,50,.45)}
+
+/* ===== SYNC STATUS BAR ===== */
+#sync-bar{
+  position:fixed;bottom:44px;left:0;right:0;z-index:250;
+  display:none;align-items:center;justify-content:space-between;
+  padding:6px 14px;font-size:.78rem;font-weight:600;flex-wrap:wrap;gap:6px;
+}
+#sync-bar.online{background:#e8f5e9;color:#1b5e20;border-top:2px solid #2e7d32}
+#sync-bar.offline{background:#ffebee;color:#b71c1c;border-top:2px solid #c62828}
+#sync-bar.pending{background:#fff3e0;color:#bf360c;border-top:2px solid #e65100}
+.sync-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0}
+.sync-dot.online{background:#2e7d32;box-shadow:0 0 0 3px rgba(46,125,50,.25)}
+.sync-dot.offline{background:#c62828;box-shadow:0 0 0 3px rgba(198,40,40,.25)}
+.sync-dot.pending{background:#e65100;box-shadow:0 0 0 3px rgba(230,81,0,.25);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.sync-bar-left{display:flex;align-items:center;gap:6px}
+.sync-bar-right{display:flex;align-items:center;gap:8px}
+.sync-btn{border:none;border-radius:6px;padding:4px 10px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.sync-btn.do-sync{background:#e65100;color:#fff}
+.sync-btn.done{background:#2e7d32;color:#fff;opacity:.7;cursor:default}
+
+/* ===== HEADER ===== */
+#header{position:sticky;top:0;z-index:200;background:var(--header);color:#fff;
+display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:auto;min-height:56px;
+box-shadow:0 2px 8px rgba(0,0,0,.3);flex-wrap:wrap;gap:4px;padding-top:6px;padding-bottom:6px}
+#header h1{font-size:1rem;font-weight:700;flex:1;margin-right:8px;min-width:120px}
+.hdr-student-info{font-size:.72rem;color:rgba(255,255,255,.8);display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:2px 0}
+.hdr-student-info span{background:rgba(255,255,255,.12);border-radius:4px;padding:2px 7px;white-space:nowrap}
+.hdr-sync-dot{width:9px;height:9px;border-radius:50%;display:inline-block;border:2px solid rgba(255,255,255,.5)}
+.hdr-sync-dot.online{background:#4caf50}
+.hdr-sync-dot.offline{background:#ef5350}
+.hdr-sync-dot.pending{background:#ff9800;animation:pulse 1.5s infinite}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+#timer-box{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:4px 10px;font-size:.9rem;font-weight:700;font-family:monospace;min-width:82px;text-align:center}
+#timer-box.warn{background:rgba(230,81,0,.7)}
+.icon-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:6px;color:#fff;cursor:pointer;padding:5px 9px;font-size:.78rem;white-space:nowrap}
+.icon-btn:hover{background:rgba(255,255,255,.25)}
+#app{display:flex;height:calc(100vh - 56px - 44px - 32px);overflow:hidden}
+#q-area{flex:1;overflow-y:auto;padding:16px 18px;min-width:0}
+#palette-panel{width:270px;min-width:220px;background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;flex-shrink:0}
+.q-card{background:var(--surface);border-radius:12px;box-shadow:var(--shadow);padding:20px;margin-bottom:14px}
+.q-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.q-num-badge{background:var(--accent);color:#fff;border-radius:6px;padding:3px 10px;font-size:.82rem;font-weight:700}
+.q-sect{font-size:.75rem;color:var(--subtext);background:var(--border);border-radius:4px;padding:2px 8px}
+.q-text{font-size:1rem;font-weight:500;line-height:1.55;margin-bottom:18px;color:var(--text)}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;align-items:flex-start;gap:10px;border:2px solid var(--border);border-radius:9px;padding:10px 14px;cursor:pointer;transition:all .15s;background:var(--surface)}
+.opt:hover{background:var(--option-hover);border-color:var(--accent)}
+.opt.selected{background:var(--option-sel);border-color:var(--option-border)}
+.opt.correct{background:#c8e6c9;border-color:#2e7d32}
+.opt.wrong{background:#ffcdd2;border-color:#c62828}
+.opt-ltr{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:.88rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.opt.selected .opt-ltr{background:var(--accent2)}
+.opt.correct .opt-ltr{background:#2e7d32}
+.opt.wrong .opt-ltr{background:#c62828}
+.opt-txt{font-size:.97rem;line-height:1.45}
+.ctrl-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.btn{border:none;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600;padding:9px 14px;transition:all .15s;white-space:nowrap}
+.btn-p{background:var(--accent);color:#fff}.btn-p:hover{background:var(--accent2)}
+.btn-s{background:#2e7d32;color:#fff}.btn-s:hover{background:#1b5e20}
+.btn-w{background:#6a1b9a;color:#fff}.btn-w:hover{background:#4a148c}
+.btn-d{background:#c62828;color:#fff}.btn-d:hover{background:#b71c1c}
+.btn-n{background:var(--border);color:var(--text)}.btn-n:hover{filter:brightness(.93)}
+.btn-sub{background:#e65100;color:#fff;padding:8px 16px;font-size:.82rem}
+.btn-sub:hover{background:#bf360c}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.pal-hdr{padding:12px 14px;border-bottom:1px solid var(--border);font-weight:700;font-size:.9rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--surface);z-index:5}
+.pal-legend{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.leg{display:flex;align-items:center;gap:5px;font-size:.72rem;color:var(--subtext)}
+.leg-dot{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+.pal-grid{display:flex;flex-wrap:wrap;gap:6px;padding:12px;align-content:flex-start}
+.pq{width:38px;height:38px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;font-weight:700;transition:all .15s;color:#fff;user-select:none}
+.pq:hover{transform:scale(1.08)}
+.pq.cur{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--accent)}
+.pq.nv{background:var(--not-visited)}.pq.na{background:var(--unattempted)}.pq.ans{background:var(--answered)}.pq.mrk{background:var(--marked)}.pq.amrk{background:var(--marked-ans)}
+.stats-bar{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.stat{display:flex;flex-direction:column;align-items:center;flex:1;min-width:50px}
+.stat-val{font-size:1.1rem;font-weight:800}
+.stat-lbl{font-size:.68rem;color:var(--subtext);text-align:center}
+.prog-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin:0 12px 10px}
+.prog-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
+.srch-box{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border)}
+.srch-box input{flex:1;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.85rem;background:var(--bg);color:var(--text);outline:none}
+.srch-box input:focus{border-color:var(--accent)}
+.srch-box button{background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:.85rem;font-weight:600}
+#footer{background:var(--footer-bg);color:#e8eaf6;height:44px;display:flex;align-items:center;justify-content:center;gap:12px;font-size:.82rem;flex-wrap:wrap;padding:0 12px}
+#footer a{color:#90caf9;text-decoration:none;font-weight:600}
+#footer a:hover{text-decoration:underline}
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:center;justify-content:center;padding:16px}
+.modal-ov.open{display:flex}
+.modal{background:var(--surface);border-radius:14px;padding:24px;max-width:500px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto}
+.modal h2{font-size:1.2rem;margin-bottom:14px;color:var(--accent)}
+.modal p{font-size:.95rem;line-height:1.55;margin-bottom:10px}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+#result-page{display:none;overflow-y:auto;padding:24px;min-height:calc(100vh - 56px - 44px - 32px)}
+.res-card{background:var(--surface);border-radius:14px;padding:28px;max-width:700px;margin:0 auto 20px;box-shadow:var(--shadow);text-align:center}
+.score-circle{width:140px;height:140px;border-radius:50%;border:8px solid var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px}
+.score-pct{font-size:2rem;font-weight:900;color:var(--accent)}
+.score-lbl{font-size:.8rem;color:var(--subtext)}
+.res-stats{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin:16px 0}
+.rs{display:flex;flex-direction:column;align-items:center}
+.rs-val{font-size:1.5rem;font-weight:800}
+.rs-lbl{font-size:.78rem;color:var(--subtext)}
+
+/* Sync status in results */
+.sync-status-card{
+  max-width:700px;margin:0 auto 16px;border-radius:12px;padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+}
+.sync-status-card.online{background:#e8f5e9;border:1px solid #a5d6a7}
+.sync-status-card.offline{background:#ffebee;border:1px solid #ef9a9a}
+.sync-status-card.pending{background:#fff3e0;border:1px solid #ffcc80}
+.sync-status-card.synced{background:#e8f5e9;border:1px solid #66bb6a}
+.sync-status-left{display:flex;align-items:center;gap:10px}
+.sync-status-icon{font-size:1.4rem}
+.sync-status-text strong{display:block;font-size:.9rem;font-weight:700}
+.sync-status-text span{font-size:.78rem;color:var(--subtext)}
+.sync-now-btn{border:none;border-radius:8px;padding:8px 16px;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+.sync-now-btn.active{background:#e65100;color:#fff}
+.sync-now-btn.active:hover{background:#bf360c}
+.sync-now-btn.disabled{background:var(--border);color:var(--subtext);cursor:not-allowed}
+
+/* Student info block */
+.student-info-block{background:linear-gradient(135deg,#e8eaf6,#e3f2fd);border-radius:12px;padding:16px 20px;margin-bottom:20px;border-left:4px solid #1565c0;text-align:left}
+.dark .student-info-block{background:linear-gradient(135deg,#0d1b4b,#1a3a5c);border-left-color:#42a5f5}
+.sib-title{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#607d8b;margin-bottom:10px}
+.sib-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.sib-item{display:flex;flex-direction:column}
+.sib-label{font-size:.7rem;color:#607d8b;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.sib-value{font-size:.9rem;font-weight:700;color:#1a1a2e;margin-top:1px}
+.dark .sib-value{color:#e6edf3}
+
+.rev-sect{background:var(--surface);border-radius:12px;padding:20px;max-width:700px;margin:0 auto 16px;box-shadow:var(--shadow)}
+.rev-q{border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden}
+.rqh{padding:10px 14px;background:var(--bg);display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:8px}
+.rqh-txt{flex:1;font-size:.88rem}
+.rqb{padding:12px 14px;display:none}
+.rqb.open{display:block}
+.r-opt{padding:6px 10px;border-radius:6px;margin:4px 0;font-size:.9rem}
+.r-opt.c{background:#c8e6c9;color:#1b5e20}
+.r-opt.w{background:#ffcdd2;color:#b71c1c}
+.badge{border-radius:4px;padding:1px 7px;font-size:.72rem;font-weight:700;white-space:nowrap}
+.bc{background:#2e7d32;color:#fff}.bw{background:#c62828;color:#fff}.bs{background:var(--not-visited);color:#fff}
+.ftabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.ftab{border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:.8rem;font-weight:600;background:var(--surface);color:var(--text)}
+.ftab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+#pal-tog{display:none;position:fixed;bottom:80px;right:14px;z-index:300;background:var(--accent);color:#fff;border:none;border-radius:50%;width:46px;height:46px;font-size:1.3rem;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.3)}
+
+/* Retest modal */
+.retest-opt{border:2px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;margin-bottom:10px;transition:all .2s;display:flex;align-items:flex-start;gap:12px}
+.retest-opt:hover{border-color:var(--accent);background:var(--option-hover)}
+.retest-opt-icon{font-size:1.5rem;flex-shrink:0}
+.retest-opt-info strong{display:block;font-weight:700;font-size:.92rem}
+.retest-opt-info span{font-size:.78rem;color:var(--subtext)}
+
+/* Toast notification */
+#toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#323232;color:#fff;border-radius:10px;padding:12px 20px;font-size:.88rem;font-weight:600;
+  z-index:9999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.success{background:#2e7d32}
+#toast.error{background:#c62828}
+#toast.info{background:#1565c0}
+
+#loading{position:fixed;inset:0;background:#1a237e;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;color:#fff}
+.spin{width:48px;height:48px;border:5px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{font-size:1rem;opacity:.8}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.res-action-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+
+/* ====== UPDATED MOBILE ALIGNMENT ====== */
+@media(max-width:768px){
+  #header { flex-direction: column; align-items: flex-start; padding: 10px 12px; gap: 8px; }
+  #header h1 { font-size: 1.1rem; min-width: auto; margin-right: 0; }
+  .hdr-right { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; gap: 6px; justify-content: flex-start; }
+  .hdr-student-info{font-size:.7rem}
+  #palette-panel{display:none;position:fixed;inset:0;z-index:400;width:100%;height:100%;border:none}
+  #palette-panel.open{display:flex;flex-direction:column}
+  #pal-tog{display:flex;align-items:center;justify-content:center}
+  .ctrl-bar .btn{padding:7px 9px;font-size:.76rem}
+  .reg-card{padding:24px 18px}
+  .range-card{padding:22px 16px}
+  #app{height:calc(100vh - 90px - 44px - 32px)}
+  .consent-data-list{grid-template-columns:1fr}
+}
+
+@media(min-width:769px) and (max-width:1024px){
+  #palette-panel{width:220px}
+  .pq{width:34px;height:34px;font-size:.68rem}
+}
+@media print{
+  #header,#footer,#palette-panel,#pal-tog,.ctrl-bar,#submit-btn,#app,#reg-page,#range-page,#consent-page,#sync-bar,#toast{display:none !important}
+  .modal-ov{display:none !important}
+  #result-page{display:block !important;height:auto;overflow:visible;padding:0}
+  .rqb{display:block !important}
+  .res-action-btns{display:none !important}
+  .sync-status-card{display:none !important}
+}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div><p>Loading Questionnaire...</p></div>
+
+<!-- ===== CONSENT PAGE ===== -->
+<div id="consent-page" style="display:none;flex-direction:column;align-items:center;justify-content:center">
+  <div class="consent-card">
+    <div class="consent-icon">🔐</div>
+    <div class="consent-title">Data Privacy & Consent</div>
+    <div class="consent-subtitle">Nurse Assistant Exam</div>
+    <div class="consent-box">
+      <strong>By continuing, you agree that your exam details and results may be stored locally and, when internet access is available, securely transmitted to the administrator for academic record purposes.</strong>
+      <div style="margin-top:10px;font-size:.85rem;color:#555">The following information will be collected:</div>
+      <div class="consent-data-list">
+        <span>Student Name</span>
+        <span>Academic Year</span>
+        <span>Group Number</span>
+        <span>Student ID</span>
+        <span>Exam Date &amp; Time</span>
+        <span>Question Range</span>
+        <span>Total Questions</span>
+        <span>Score &amp; Percentage</span>
+      </div>
+    </div>
+    <label class="consent-check-row" id="consent-check-row">
+      <input type="checkbox" id="consent-check" onchange="toggleConsent()">
+      <span class="consent-check-label">I have read and understood the above. I consent to the collection and transmission of my exam data for academic record purposes.</span>
+    </label>
+    <div class="consent-btns">
+      <button class="consent-decline" onclick="declineConsent()">Decline</button>
+      <button class="consent-accept" id="consent-accept-btn" onclick="acceptConsent()">Accept &amp; Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REGISTRATION PAGE ===== -->
+<div id="reg-page" style="display:none">
+  <div class="reg-card">
+    <div class="recovery-banner" id="recovery-banner">
+      <p>⚡ Unfinished session detected! Would you like to resume where you left off?</p>
+      <div class="rb-btns">
+        <button class="rb-btn rb-resume" onclick="resumeSession()">Resume Session</button>
+        <button class="rb-btn rb-discard" onclick="discardSession()">Start Fresh</button>
+      </div>
+    </div>
+    <div class="reg-logo">
+      <div class="reg-logo-icon">🩺</div>
+      <h2>Nurse Assistant Exam</h2>
+      <p>Candidate Registration</p>
+    </div>
+    <div class="reg-divider"></div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-name">Student Name <span class="req-star">*</span></label>
+      <input class="reg-input" type="text" id="reg-name" placeholder="Enter your full name" autocomplete="name">
+      <div class="field-err" id="err-name">⚠ Student name is required.</div>
+    </div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-year">Academic Year <span class="req-star">*</span></label>
+      <select class="reg-input reg-select" id="reg-year">
+        <option value="">-- Select Academic Year --</option>
+        <option value="1st Year">1st Year</option>
+        <option value="2nd Year">2nd Year</option>
+        <option value="3rd Year">3rd Year</option>
+        <option value="Final Year">Final Year</option>
+        <option value="Intern">Intern</option>
+        <option value="PG Year 1">PG Year 1</option>
+        <option value="PG Year 2">PG Year 2</option>
+        <option value="PG Year 3">PG Year 3</option>
+      </select>
+      <div class="field-err" id="err-year">⚠ Please select your academic year.</div>
+    </div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-group">Group Number <span class="req-star">*</span></label>
+      <input class="reg-input" type="text" id="reg-group" placeholder="e.g. Group 5 / B-12">
+      <div class="field-err" id="err-group">⚠ Group number is required.</div>
+    </div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-id">Student ID <span class="opt-badge">(Auto-Generated)</span></label>
+      <input class="reg-input" type="text" id="reg-id" placeholder="Auto-generated on submit" readonly style="background:#f0f4f8;cursor:not-allowed;color:#607d8b;">
+    </div>
+    <div class="reg-field">
+      <label class="reg-label" for="reg-email">Email Address <span class="opt-badge">(Optional)</span></label>
+      <input class="reg-input" type="email" id="reg-email" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <button class="reg-btn" onclick="submitReg()">Continue to Exam →</button>
+    <div class="reg-footer-note">🔒 Your information is stored locally and transmitted only with your consent.</div>
+  </div>
+</div>
+
+<!-- ===== QUESTION RANGE PAGE ===== -->
+<div id="range-page" style="display:none">
+  <div class="range-card">
+    <div class="welcome-banner">
+      <p>👋 Welcome, <span id="welcome-name">Student</span>! You're all set.</p>
+    </div>
+    <div class="range-title">Select Question Range</div>
+    <div class="range-sub">Choose which questions you'd like to attempt or study in this session. Total: <span id="total-q-count"></span> Questions</div>
+    <div class="range-options" id="range-opts">
+      <div class="range-opt selected" onclick="selectRange(this,'all','all')" data-from="all" data-to="all">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>📚 All Questions (Study Mode)</strong><span>Loads all questions with correct answers visible</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,1,300)" data-from="1" data-to="300">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>📖 Q1–Q300</strong><span>Practice questions 1 to 300</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,301,'end')" data-from="301" data-to="end">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>📋 Q301 onward</strong><span>Practice remaining questions</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'random25','random25')" data-from="random25" data-to="random25">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>🎲 Random 25 Questions</strong><span>Randomly selects 25 non-repeating questions</span></div>
+      </div>
+      <div class="range-opt" onclick="selectRange(this,'custom','custom')" data-from="custom" data-to="custom">
+        <div class="range-radio"></div>
+        <div class="range-opt-info"><strong>🔢 Custom Range</strong><span>Enter start and end question numbers</span></div>
+      </div>
+    </div>
+    <div id="custom-range-inputs" style="display:none">
+      <div class="custom-range-row">
+        <div style="flex:1"><label>Start Question #</label><input type="number" id="custom-from" placeholder="e.g. 1" min="1"></div>
+        <div style="flex:1"><label>End Question #</label><input type="number" id="custom-to" placeholder="e.g. 100" min="1"></div>
+      </div>
+      <div id="range-err" style="color:#c62828;font-size:.8rem;margin-top:4px;display:none"></div>
+    </div>
+    <button class="start-btn" onclick="startExam()">🚀 Start</button>
+  </div>
+</div>
+
+<!-- ===== MAIN EXAM ===== -->
+<div id="header" style="display:none">
+  <div style="flex:1;min-width:0">
+    <h1>Nurse Assistant Exam</h1>
+    <div class="hdr-student-info" id="hdr-student-info"></div>
+  </div>
+  <div class="hdr-right">
+    <span class="hdr-sync-dot nv" id="hdr-sync-dot" title="Connection status"></span>
+    <div id="timer-box">00:00:00</div>
+    <button class="icon-btn" onclick="toggleDark()" id="dark-btn">Dark</button>
+    <button class="icon-btn" onclick="toggleFS()">⛶</button>
+    <button class="icon-btn" onclick="reloadExam()" id="reload-btn">↺ Reload</button>
+    <button class="icon-btn" onclick="exitToMenu()" id="exit-btn" style="color: #f44336;">🚪 Exit</button>
+    <button class="btn btn-sub" onclick="confirmSubmit()" id="submit-btn" style="display:none;">Submit</button>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div id="q-area">
+    <div class="q-card">
+      <div class="q-meta">
+        <span class="q-num-badge" id="q-badge">Q 1</span>
+        <span class="q-sect" id="q-sect">Nursing Fundamentals</span>
+      </div>
+      <div class="q-text" id="q-text">Loading...</div>
+      <div class="opts" id="opts-container"></div>
+      <div class="ctrl-bar">
+        <button class="btn btn-n" onclick="navigate(-1)" id="prev-btn">◀ Prev</button>
+        <button class="btn btn-p" onclick="navigate(1)" id="next-btn">Next ▶</button>
+        <button class="btn btn-s" onclick="saveAndNext()" id="save-next-btn">Save &amp; Next</button>
+        <button class="btn btn-w" onclick="markReview()" id="mark-btn">Mark Review</button>
+        <button class="btn btn-n" onclick="clearResp()" id="clear-btn">Clear Selection</button>
+      </div>
+    </div>
+  </div>
+  <div id="palette-panel">
+    <div class="pal-hdr"><span>Question Palette</span><button class="icon-btn" onclick="closePal()">✕</button></div>
+    <div class="stats-bar" id="stats-bar"></div>
+    <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+    <div class="srch-box">
+      <input type="number" id="q-srch" placeholder="Go to Q#" min="1" onkeydown="if(event.key==='Enter')doJump()">
+      <button onclick="doJump()">Go</button>
+    </div>
+    <div class="pal-legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--not-visited)"></div>Not Visited</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--unattempted)"></div>Not Ans</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--answered)"></div>Ans</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--marked)"></div>Marked</div>
+    </div>
+    <div style="padding:8px 12px;border-bottom:1px solid var(--border)">
+      <div class="ftabs">
+        <div class="ftab active" onclick="setPalFlt('all',this)">All</div>
+        <div class="ftab" onclick="setPalFlt('ans',this)">Ans</div>
+        <div class="ftab" onclick="setPalFlt('na',this)">Unans</div>
+        <div class="ftab" onclick="setPalFlt('mrk',this)">Mark</div>
+      </div>
+    </div>
+    <div class="pal-grid" id="pal-grid"></div>
+  </div>
+</div>
+
+<div id="sync-bar" style="display:none">
+  <div class="sync-bar-left">
+    <span class="sync-dot" id="sync-dot"></span>
+    <span id="sync-bar-text">Checking connection...</span>
+  </div>
+  <div class="sync-bar-right">
+    <button class="sync-btn" id="sync-bar-btn" onclick="trySyncNow()" style="display:none">Sync Now</button>
+  </div>
+</div>
+
+<div id="result-page" style="display:none">
+  <div class="sync-status-card" id="res-sync-card">
+    <div class="sync-status-left">
+      <div class="sync-status-icon" id="res-sync-icon">⏳</div>
+      <div class="sync-status-text">
+        <strong id="res-sync-title">Checking sync status...</strong>
+        <span id="res-sync-sub">Please wait</span>
+      </div>
+    </div>
+    <button class="sync-now-btn" id="res-sync-btn" onclick="trySyncNow()">Sync Now</button>
+  </div>
+
+  <div class="res-card">
+    <h2 style="font-size:1.5rem;margin-bottom:16px">📋 Exam Results</h2>
+    <div class="student-info-block" id="res-student-block">
+      <div class="sib-title">Candidate Information</div>
+      <div class="sib-grid" id="res-student-grid"></div>
+    </div>
+    <div class="score-circle"><span class="score-pct" id="res-pct">0%</span><span class="score-lbl">Score</span></div>
+    <div class="res-stats" id="res-stats"></div>
+    <div class="res-action-btns">
+      <button class="btn btn-p" onclick="showRev('all')">All Questions</button>
+      <button class="btn btn-s" onclick="showRev('correct')">Correct</button>
+      <button class="btn btn-d" onclick="showRev('wrong')">Wrong</button>
+      <button class="btn btn-w" onclick="showRev('skip')">Skipped</button>
+      <button class="btn btn-n" onclick="downloadResult()">⬇ Download</button>
+      <button class="btn btn-n" onclick="window.print()">🖨 Print</button>
+      <button class="btn btn-sub" onclick="openRetestModal()">🔄 Retest</button>
+    </div>
+  </div>
+  <div class="rev-sect" id="rev-container"></div>
+</div>
+
+<button id="pal-tog" onclick="togglePal()">☰</button>
+
+<div id="footer" style="display:none">
+  <span>Nurse Assistant Exam | OSHMEDCHRONICLE | Pradeep Waghmare</span>
+</div>
+
+<div class="modal-ov" id="confirm-modal">
+  <div class="modal">
+    <h2>Submit Exam?</h2>
+    <p id="confirm-msg"></p>
+    <div class="modal-btns">
+      <button class="btn btn-n" onclick="closeModal('confirm-modal')">Cancel</button>
+      <button class="btn btn-d" onclick="submitExam()">Submit Now</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="exit-modal">
+  <div class="modal">
+    <h2>Exit to Menu?</h2>
+    <p>Are you sure you want to stop? Current progress will be lost.</p>
+    <div class="modal-btns">
+      <button class="btn btn-n" onclick="closeModal('exit-modal')">Cancel</button>
+      <button class="btn btn-d" onclick="doExitToMenu()">Exit</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="reload-modal">
+  <div class="modal">
+    <h2>Reload Exam?</h2>
+    <p>Are you sure you want to reload? Current progress will be lost.</p>
+    <div class="modal-btns">
+      <button class="btn btn-n" onclick="closeModal('reload-modal')">Cancel</button>
+      <button class="btn btn-d" onclick="doReload()">Reload</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="retest-modal">
+  <div class="modal">
+    <h2>🔄 Retest Options</h2>
+    <div class="retest-opt" onclick="doRetake()">
+      <div class="retest-opt-icon">🔁</div>
+      <div class="retest-opt-info"><strong>Retake Same Range</strong><span>Keeps your name, year and group. Resets answers and timer.</span></div>
+    </div>
+    <div class="retest-opt" onclick="doFreshExam()">
+      <div class="retest-opt-icon">🆕</div>
+      <div class="retest-opt-info"><strong>Start Fresh Exam</strong><span>Clears all student information. Returns to registration screen.</span></div>
+    </div>
+    <div class="modal-btns"><button class="btn btn-n" onclick="closeModal('retest-modal')">Cancel</button></div>
+  </div>
+</div>
+
+<div class="modal-ov" id="pending-sync-modal">
+  <div class="modal">
+    <h2>🌐 Internet Connected!</h2>
+    <p>You have pending exam result(s) that haven't been synchronized yet. Would you like to sync them now?</p>
+    <div class="modal-btns">
+      <button class="btn btn-n" onclick="closeModal('pending-sync-modal')">Later</button>
+      <button class="btn btn-s" onclick="syncPendingNow()">Sync Now</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// =========================================================================
+// [!] IMPORTANT: The QUESTIONS array has been truncated due to workspace 
+// token limits in this coding environment. PLEASE COPY YOUR FULL 'QUESTIONS' 
+// ARRAY BACK HERE FROM YOUR ORIGINAL CODE TO RESTORE ALL 639 QUESTIONS!
+// =========================================================================
+var QUESTIONS = [
+  {
+    "rawNum": "1",
+    "q": "Medications will act quickly if they are entered…",
+    "opts": [
+      {"l": "A", "t": "intravenously"},
+      {"l": "B", "t": "intramusculary"},
+      {"l": "C", "t": "intradermal"},
+      {"l": "D", "t": "hypodermic"},
+      {"l": "E", "t": "parenteral"}
+    ],
+    "ans": "A",
+    "num": "1"
+  },
+  {
+    "rawNum": "2",
+    "q": "A drug is ordered to be given sublingually. How should the nurse administer this drug?",
+    "opts": [
+      {"l": "A", "t": "Have the patient swallow the drug."},
+      {"l": "B", "t": "Place the drug under the patient's tongue."},
+      {"l": "C", "t": "Put the drug in the patient's cheek."},
+      {"l": "D", "t": "Apply the drug to the patient's skin."},
+      {"l": "E", "t": "No correct answer"}
+    ],
+    "ans": "B",
+    "num": "2"
+  }
+];
+// =========================================================================
+
+// State
+var student={}, consentGiven=false, examQuestions=[];
+var selectedRange={from:'all',to:'all',label:'All Questions'};
+var cur=0, visited={}, answers={}, marked={}, submitted=false, seconds=0, timerInt=null, palFilter='all';
+var isOnline=navigator.onLine, syncStatus='pending', lastResult=null, pendingSyncPrompted=false;
+var studyMode = false;
+
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null}}
+function lsJ(k,v){try{if(v===undefined){var r=localStorage.getItem(k);return r?JSON.parse(r):null;}localStorage.setItem(k,JSON.stringify(v));}catch(e){return null}}
+function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
+
+function showToast(msg,type,dur){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.className='show '+(type||'');
+  clearTimeout(t._to);t._to=setTimeout(function(){t.className=''},dur||3000);
+}
+function pad(n){return n<10?'0'+n:n}
+function formatTime(secs){var h=Math.floor(secs/3600),m=Math.floor((secs%3600)/60),s=secs%60;return (h?pad(h)+':':'')+pad(m)+':'+pad(s)}
+
+window.onload=function(){
+  updateSyncUI();
+  document.getElementById('total-q-count').textContent = QUESTIONS.length;
+  setTimeout(function(){
+    document.getElementById('loading').style.display='none';
+    var dark=ls('cm_dark')==='1';
+    if(dark){document.body.classList.add('dark');document.getElementById('dark-btn').textContent='Light';}
+    consentGiven=ls('cm_consent')==='1';
+    if(!consentGiven){document.getElementById('consent-page').style.display='flex';return;}
+    afterConsent();
+  },800);
+};
+
+function toggleConsent(){
+  var chk=document.getElementById('consent-check');
+  document.getElementById('consent-check-row').classList.toggle('checked',chk.checked);
+  document.getElementById('consent-accept-btn').classList.toggle('enabled',chk.checked);
+}
+function acceptConsent(){
+  if(!document.getElementById('consent-check').checked) return;
+  ls('cm_consent','1');consentGiven=true;
+  document.getElementById('consent-page').style.display='none';
+  afterConsent();
+}
+function declineConsent(){
+  document.getElementById('consent-page').innerHTML=
+    '<div style="text-align:center;padding:40px;"><h2 style="color:#fff">Access Denied</h2><button onclick="location.reload()" style="margin-top:20px;padding:10px 20px;">Go Back</button></div>';
+}
+function afterConsent(){
+  var sess=lsJ('cm_session');var savedStudent=lsJ('cm_student');
+  if(savedStudent&&savedStudent.name){
+    student=savedStudent;
+    if(sess&&sess.answers&&Object.keys(sess.answers).length>0){
+      document.getElementById('recovery-banner').style.display='block';
+    }
+    document.getElementById('reg-name').value=student.name||'';
+    document.getElementById('reg-year').value=student.year||'';
+    document.getElementById('reg-group').value=student.group||'';
+    document.getElementById('reg-id').value=student.id||'';
+    document.getElementById('reg-email').value=student.email||'';
+  }
+  document.getElementById('reg-page').style.display='flex';
+}
+function resumeSession(){
+  var sess=lsJ('cm_session');if(!sess) return;
+  student=lsJ('cm_student')||{};
+  examQuestions=sess.examQuestions||[];
+  selectedRange=sess.selectedRange||{from:'all',to:'all',label:'All Questions'};
+  studyMode = selectedRange.from === 'all';
+  cur=sess.cur||0; visited=sess.visited||{}; answers=sess.answers||{}; marked=sess.marked||{}; seconds=sess.seconds||0; submitted=false;
+  document.getElementById('reg-page').style.display='none';
+  showExamUI();
+  showToast('Session restored!','success',3000);
+}
+function discardSession(){
+  lsDel('cm_session');
+  document.getElementById('recovery-banner').style.display='none';
+  cur=0;visited={};answers={};marked={};seconds=0;
+}
+function saveSession(){
+  if(submitted) return;
+  lsJ('cm_session',{examQuestions:examQuestions,selectedRange:selectedRange,cur:cur,visited:visited,answers:answers,marked:marked,seconds:seconds});
+}
+
+function submitReg(){
+  if(!document.getElementById('reg-name').value.trim() || !document.getElementById('reg-year').value || !document.getElementById('reg-group').value.trim()) {
+    showToast('Please fill all required fields.', 'error');
+    return;
+  }
+  var dateStr=new Date().getFullYear().toString()+(new Date().getMonth()+1).toString().padStart(2,'0')+new Date().getDate().toString().padStart(2,'0');
+  var id=document.getElementById('reg-id').value || 'PW-NA-'+dateStr+'-'+Math.floor(1000+Math.random()*9000);
+  document.getElementById('reg-id').value=id;
+  student={name:document.getElementById('reg-name').value.trim(), year:document.getElementById('reg-year').value, group:document.getElementById('reg-group').value.trim(), id:id, email:document.getElementById('reg-email').value.trim()};
+  lsJ('cm_student',student);lsDel('cm_session');
+  document.getElementById('reg-page').style.display='none';
+  document.getElementById('welcome-name').textContent=student.name;
+  document.getElementById('range-page').style.display='flex';
+}
+
+function selectRange(el,from,to){
+  document.querySelectorAll('.range-opt').forEach(function(o){o.classList.remove('selected');});
+  el.classList.add('selected');
+  var label=from==='all'?'All Questions (Study Mode)':from==='random25'?'Random 25':from==='custom'?'Custom Range':('Q'+from+'\u2013Q'+(to==='end'?QUESTIONS.length:to));
+  selectedRange={from:from,to:to,label:label};
+  document.getElementById('custom-range-inputs').style.display=(from==='custom')?'block':'none';
+}
+
+function shuffleArray(arr){for(var i=arr.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var tmp=arr[i];arr[i]=arr[j];arr[j]=tmp;}return arr;}
+
+function startExam(){
+  var from=selectedRange.from,to=selectedRange.to;
+  studyMode = from === 'all';
+  if(from==='all'){
+    examQuestions=QUESTIONS.slice();
+  } else if(from==='random25'){
+    var pool=QUESTIONS.slice(); shuffleArray(pool);
+    var picked=pool.slice(0,25);
+    examQuestions=picked.map(function(q){
+      var newOpts=q.opts.slice(); shuffleArray(newOpts);
+      var remapped=newOpts.map(function(o,idx){return {l:String.fromCharCode(65+idx),t:o.t,origL:o.l};});
+      var newAns=remapped.find(function(o){return o.origL===q.ans;});
+      return {num:q.num,q:q.q,opts:remapped.map(function(o){return {l:o.l,t:o.t};}),ans:newAns?newAns.l:q.ans};
+    });
+  } else if(from==='custom'){
+    from=parseInt(document.getElementById('custom-from').value);
+    to=parseInt(document.getElementById('custom-to').value);
+    if(isNaN(from)||isNaN(to)||from>to){showToast('Invalid custom range','error');return;}
+    examQuestions=QUESTIONS.filter(function(q){return parseInt(q.num)>=from&&parseInt(q.num)<=to;});
+  } else {
+    from=parseInt(from); to=to==='end'?QUESTIONS.length:parseInt(to);
+    examQuestions=QUESTIONS.filter(function(q){return parseInt(q.num)>=from&&parseInt(q.num)<=to;});
+  }
+  if(examQuestions.length===0){showToast('No questions in range','error');return;}
+  cur=0;visited={};answers={};marked={};submitted=false;seconds=0;
+  document.getElementById('range-page').style.display='none';
+  showExamUI();
+}
+
+function showExamUI(){
+  document.getElementById('header').style.display='';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('footer').style.display='flex';
+  document.getElementById('sync-bar').style.display='flex';
+  document.getElementById('submit-btn').style.display = studyMode ? 'none' : 'block';
+  document.getElementById('exit-btn').style.display = 'inline-block';
+  document.getElementById('hdr-student-info').innerHTML='<span>'+escH(student.name)+'</span><span>'+escH(student.year)+'</span><span>Grp:'+escH(student.group)+'</span>';
+  renderQ();
+  clearInterval(timerInt);
+  timerInt=setInterval(function(){seconds++;document.getElementById('timer-box').textContent=formatTime(seconds);if(seconds%30===0) saveSession();},1000);
+}
+
+function renderQ(){
+  var q=examQuestions[cur]; visited[cur]=true;
+  document.getElementById('q-badge').textContent='Q '+q.num+' ('+(cur+1)+'/'+examQuestions.length+')';
+  document.getElementById('q-sect').textContent='Nurse Assistant Exam';
+  document.getElementById('q-text').textContent=q.q;
+  var c=document.getElementById('opts-container'); c.innerHTML='';
+  var answered=answers[cur];
+  
+  q.opts.forEach(function(o){
+    var d=document.createElement('div'); d.className='opt';
+    var isCorrect = o.l === q.ans;
+    var isSelected = answered === o.l;
+
+    if(studyMode) {
+      if(isCorrect) d.classList.add('correct');
+      // If student clicks an option in study mode, just highlight what they click vs correct
+      if(isSelected && !isCorrect) d.classList.add('wrong');
+    } else {
+      if(isSelected) d.classList.add('selected');
+    }
+
+    d.innerHTML='<div class="opt-ltr">'+o.l+'</div><div class="opt-txt">'+escH(o.t)+'</div>';
+    d.onclick=function(){ selectOpt(o.l, d); };
+    c.appendChild(d);
+  });
+  
+  document.getElementById('prev-btn').disabled=(cur===0);
+  buildPalette(); updateStats();
+}
+
+function selectOpt(l, el){
+  if(submitted) return;
+  answers[cur] = l; // allowed to change answers
+  renderQ(); // re-render to update classes
+}
+function clearResp(){ 
+    delete answers[cur]; 
+    renderQ(); 
+}
+
+function navigate(d){var n=cur+d;if(n>=0&&n<examQuestions.length){cur=n;renderQ();}}
+function saveAndNext(){if(cur<examQuestions.length-1){cur++;renderQ();}}
+function markReview(){marked[cur]=!marked[cur];buildPalette();updateStats();}
+function doJump(){var v=parseInt(document.getElementById('q-srch').value);var idx=examQuestions.findIndex(q=>parseInt(q.num)===v);if(idx>=0){cur=idx;renderQ();closePal();}}
+function getStatus(i){var a=!!answers[i],m=!!marked[i],v=!!visited[i];if(a&&m) return 'amrk';if(m) return 'mrk';if(a) return 'ans';if(v) return 'na';return 'nv';}
+function buildPalette(){
+  var g=document.getElementById('pal-grid'); g.innerHTML='';
+  examQuestions.forEach(function(q,i){
+    var st=getStatus(i); if(palFilter!=='all'&&st!==palFilter) return;
+    var d=document.createElement('div'); d.className='pq '+st+(i===cur?' cur':'');
+    d.textContent=q.num; d.onclick=function(){cur=i;renderQ();}; g.appendChild(d);
+  });
+}
+function updateStats(){
+  var ans=Object.keys(answers).length, mrk=Object.keys(marked).filter(k=>marked[k]).length, vis=Object.keys(visited).length;
+  document.getElementById('stats-bar').innerHTML=[{v:examQuestions.length,l:'Total'},{v:ans,l:'Ans',c:'color:#2e7d32'},{v:examQuestions.length-ans,l:'Not Ans',c:'color:#c62828'},{v:mrk,l:'Mrk',c:'color:#6a1b9a'}].map(s=>'<div class="stat"><span class="stat-val" style="'+(s.c||'')+'">'+s.v+'</span><span class="stat-lbl">'+s.l+'</span></div>').join('');
+  document.getElementById('prog-fill').style.width=(ans/examQuestions.length*100)+'%';
+}
+function setPalFlt(f,el){palFilter=f;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));el.classList.add('active');buildPalette();}
+function closePal(){document.getElementById('palette-panel').classList.remove('open');}
+function togglePal(){document.getElementById('palette-panel').classList.toggle('open');}
+function toggleFS(){if(!document.fullscreenElement) document.documentElement.requestFullscreen();else document.exitFullscreen();}
+function toggleDark(){document.body.classList.toggle('dark'); ls('cm_dark',document.body.classList.contains('dark')?'1':'0');}
+
+function reloadExam(){document.getElementById('reload-modal').classList.add('open');}
+function doReload(){
+  lsDel('cm_session');location.reload();
+}
+
+function exitToMenu(){
+  document.getElementById('exit-modal').classList.add('open');
+}
+
+function doExitToMenu(){
+  closeModal('exit-modal');
+  lsDel('cm_session');
+  location.reload();
+}
+function confirmSubmit(){
+  document.getElementById('confirm-msg').textContent='You have answered '+Object.keys(answers).length+' of '+examQuestions.length+' questions. Submit now?';
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function submitExam(){
+  closeModal('confirm-modal'); clearInterval(timerInt); submitted=true; lsDel('cm_session');
+  var correct=0,wrong=0,skip=0;
+  examQuestions.forEach(function(q,i){if(!answers[i]) skip++;else if(answers[i]===q.ans) correct++;else wrong++;});
+  var total=examQuestions.length, pct=Math.round(correct/total*100);
+  
+  document.getElementById('app').style.display='none';
+  document.getElementById('header').style.display='flex';
+  document.getElementById('result-page').style.display='block';
+  document.getElementById('sync-bar').style.display='none';
+  
+  document.getElementById('res-pct').textContent=pct+'%';
+  document.getElementById('res-stats').innerHTML=[{v:total,l:'Total'},{v:correct,l:'Correct'},{v:wrong,l:'Wrong'},{v:skip,l:'Skipped'}].map(s=>'<div class="rs"><span class="rs-val">'+s.v+'</span><span class="rs-lbl">'+s.l+'</span></div>').join('');
+  
+  var sibGrid = document.getElementById('res-student-grid');
+  if(sibGrid) {
+    sibGrid.innerHTML = 
+      '<div class="sib-item"><span class="sib-label">Name</span><span class="sib-value">'+escH(student.name)+'</span></div>' +
+      '<div class="sib-item"><span class="sib-label">Year</span><span class="sib-value">'+escH(student.year)+'</span></div>' +
+      '<div class="sib-item"><span class="sib-label">Group</span><span class="sib-value">'+escH(student.group)+'</span></div>' +
+      '<div class="sib-item"><span class="sib-label">Email</span><span class="sib-value">'+escH(student.email || 'N/A')+'</span></div>' +
+      '<div class="sib-item"><span class="sib-label">ID</span><span class="sib-value">'+escH(student.id)+'</span></div>';
+  }
+
+  ls('cm_pending_sync', '1');
+  updateSyncUI();
+  if(isOnline) trySyncNow();
+
+  showRev('all');
+}
+function showRev(filter){
+  var c=document.getElementById('rev-container'); c.innerHTML='';
+  examQuestions.forEach(function(q,i){
+    var ua=answers[i], ca=q.ans, isC=ua===ca, isS=!ua;
+    if(filter==='correct'&&!isC) return; if(filter==='wrong'&&(isC||isS)) return; if(filter==='skip'&&!isS) return;
+    var d=document.createElement('div'); d.className='rev-q';
+    var bg=isS?'bs':isC?'bc':'bw';
+    d.innerHTML='<div class="rqh" onclick="this.nextElementSibling.classList.toggle(\'open\')"><span class="rqh-txt"><b>Q'+q.num+'.</b> '+escH(q.q)+'</span><span class="badge '+bg+'">'+(isS?'Skipped':isC?'Correct':'Wrong')+'</span></div><div class="rqb">'+
+      q.opts.map(o=>'<div class="r-opt'+(o.l===ca?' c':(o.l===ua&&!isC?' w':''))+'">'+o.l+'. '+escH(o.t)+'</div>').join('')+'</div>';
+    c.appendChild(d);
+  });
+}
+function openRetestModal(){document.getElementById('retest-modal').classList.add('open');}
+function doRetake(){closeModal('retest-modal');document.getElementById('result-page').style.display='none';document.getElementById('range-page').style.display='flex';}
+function doFreshExam(){lsDel('cm_student');location.reload();}
+
+function downloadResult() {
+  var correct=0,wrong=0,skip=0;
+  examQuestions.forEach(function(q,i){if(!answers[i]) skip++;else if(answers[i]===q.ans) correct++;else wrong++;});
+  var total=examQuestions.length, pct=Math.round(correct/total*100);
+  var text = "Nurse Assistant Exam Results\n";
+  text += "---------------------------\n";
+  text += "Candidate: " + student.name + "\n";
+  text += "Year: " + student.year + "\n";
+  text += "Group: " + student.group + "\n";
+  text += "ID: " + student.id + "\n";
+  text += "Email: " + (student.email || 'N/A') + "\n";
+  text += "---------------------------\n";
+  text += "Score: " + pct + "% (" + correct + " out of " + total + ")\n";
+  text += "Correct: " + correct + "\n";
+  text += "Wrong: " + wrong + "\n";
+  text += "Skipped: " + skip + "\n";
+  var blob = new Blob([text], { type: 'text/plain' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'Exam_Result_' + student.name.replace(/\s+/g, '_') + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+window.addEventListener('online', function(){
+  isOnline=true;
+  updateSyncUI();
+  if(ls('cm_pending_sync')==='1' && !pendingSyncPrompted){
+    document.getElementById('pending-sync-modal').classList.add('open');
+    pendingSyncPrompted=true;
+  }
+});
+window.addEventListener('offline', function(){
+  isOnline=false;
+  updateSyncUI();
+});
+
+function updateSyncUI(){
+  var sb = document.getElementById('sync-bar');
+  if(!sb) return;
+  var sdt = document.getElementById('sync-dot');
+  var sbt = document.getElementById('sync-bar-text');
+  var sbtn = document.getElementById('sync-bar-btn');
+  
+  var hsd = document.getElementById('hdr-sync-dot');
+  
+  var rsc = document.getElementById('res-sync-card');
+  var rsi = document.getElementById('res-sync-icon');
+  var rst = document.getElementById('res-sync-title');
+  var rss = document.getElementById('res-sync-sub');
+  var rsb = document.getElementById('res-sync-btn');
+  
+  var hasPending = ls('cm_pending_sync')==='1';
+  
+  sb.className = '';
+  if(sdt) sdt.className = 'sync-dot';
+  if(hsd) hsd.className = 'hdr-sync-dot';
+  if(rsc) rsc.className = 'sync-status-card';
+  if(rsb) rsb.className = 'sync-now-btn';
+  
+  if(!isOnline){
+    syncStatus = 'offline';
+    sb.classList.add('offline'); if(sdt) sdt.classList.add('offline'); if(hsd) hsd.classList.add('offline');
+    if(sbt) sbt.textContent = 'Offline - Progress saved locally';
+    if(sbtn) sbtn.style.display = 'none';
+    
+    if(rsc){
+      rsc.classList.add('offline');
+      if(rsi) rsi.textContent = '❌';
+      if(rst) rst.textContent = 'You are currently offline';
+      if(rss) rss.textContent = 'Results saved locally. Connect to internet to sync.';
+      if(rsb){
+         rsb.textContent = 'Offline';
+         rsb.classList.add('disabled');
+         rsb.disabled = true;
+      }
+    }
+  } else if(hasPending){
+    syncStatus = 'pending';
+    sb.classList.add('pending'); if(sdt) sdt.classList.add('pending'); if(hsd){ hsd.classList.remove('nv'); hsd.classList.add('pending'); }
+    if(sbt) sbt.textContent = 'Connected - Pending sync';
+    if(sbtn){ sbtn.style.display = 'inline-block'; sbtn.className = 'sync-btn do-sync'; sbtn.textContent = 'Sync Now'; sbtn.disabled = false; }
+    
+    if(rsc){
+      rsc.classList.add('pending');
+      if(rsi) rsi.textContent = '⚠️';
+      if(rst) rst.textContent = 'Pending synchronization';
+      if(rss) rss.textContent = 'Your results need to be synced to the server.';
+      if(rsb){
+         rsb.textContent = 'Sync Now';
+         rsb.classList.add('active');
+         rsb.disabled = false;
+      }
+    }
+  } else {
+    syncStatus = 'synced';
+    sb.classList.add('online'); if(sdt) sdt.classList.add('online'); if(hsd){ hsd.className = 'hdr-sync-dot online nv'; }
+    if(sbt) sbt.textContent = 'Synced & Protected';
+    if(sbtn){ sbtn.style.display = 'inline-block'; sbtn.className = 'sync-btn done'; sbtn.textContent = 'All Synced'; sbtn.disabled = true; }
+    
+    if(rsc){
+      rsc.classList.add('synced');
+      if(rsi) rsi.textContent = '✅';
+      if(rst) rst.textContent = 'Results securely synced';
+      if(rss) rss.textContent = 'Your data has been successfully backed up.';
+      if(rsb){
+         rsb.textContent = 'Synced';
+         rsb.classList.add('disabled');
+         rsb.disabled = true;
+      }
+    }
+  }
+}
+
+function trySyncNow() {
+  if(!isOnline) return;
+  var sbtn = document.getElementById('sync-bar-btn');
+  var rsb = document.getElementById('res-sync-btn');
+  if(sbtn) { sbtn.textContent = 'Syncing...'; sbtn.disabled = true; }
+  if(rsb) { rsb.textContent = 'Syncing...'; rsb.disabled = true; }
+  
+  var correct = 0, wrong = 0, skip = 0;
+  examQuestions.forEach(function(q, i) {
+    if(!answers[i]) skip++;
+    else if(answers[i] === q.ans) correct++;
+    else wrong++;
+  });
+  var total = examQuestions.length, pct = Math.round(correct / total * 100);
+  var attempted = total - skip;
+  var markedForRev = Object.keys(marked).length;
+  var deviceStr = /Mobile|Android|iP(hone|od|ad)/.test(navigator.userAgent) ? "Mobile" : "Desktop";
+  var dateStr = new Date().toLocaleDateString();
+  var timeStr = new Date().toLocaleTimeString();
+  var durationStr = formatTime(seconds);
+
+  var payload = {
+    student: student,
+    results: { total: total, correct: correct, wrong: wrong, skip: skip, pct: pct },
+    
+    // Flat properties expected by Google Apps Script (covering multiple naming conventions)
+    name: student.name,
+    year: student.year,
+    academicYear: student.year,
+    "Academic Year": student.year,
+    academic_year: student.year,
+    group: student.group,
+    groupNumber: student.group,
+    "Group Number": student.group,
+    group_number: student.group,
+    studentId: student.id || "N/A",
+    id: student.id || "N/A",
+    "Student ID": student.id || "N/A",
+    student_id: student.id || "N/A",
+    email: student.email || "N/A",
+    "Email": student.email || "N/A",
+    
+    examName: "Nurse Assistant Exam",
+    exam: "Nurse Assistant Exam",
+    title: "Nurse Assistant Exam",
+    "Exam Name": "Nurse Assistant Exam",
+    exam_name: "Nurse Assistant Exam",
+    
+    date: dateStr,
+    "Date": dateStr,
+    time: timeStr,
+    "Time": timeStr,
+    duration: durationStr,
+    "Duration": durationStr,
+    
+    range: selectedRange.label,
+    selectedRange: selectedRange.label,
+    "Selected Range": selectedRange.label,
+    selected_range: selectedRange.label,
+    
+    device: deviceStr,
+    deviceType: deviceStr,
+    "Device Type": deviceStr,
+    device_type: deviceStr,
+    
+    total: total,
+    totalQuestions: total,
+    "Total Questions": total,
+    total_questions: total,
+    
+    attempted: attempted,
+    "Attempted": attempted,
+    
+    skip: skip,
+    skipped: skip,
+    notAttempted: skip,
+    unattempted: skip,
+    "Not Attempted": skip,
+    not_attempted: skip,
+    
+    marked: markedForRev,
+    markedForRev: markedForRev,
+    "Marked for Rev": markedForRev,
+    marked_for_rev: markedForRev,
+    
+    correct: correct,
+    "Correct": correct,
+    wrong: wrong,
+    "Wrong": wrong,
+    score: correct,
+    "Score": correct,
+    percentage: pct + "%",
+    pct: pct + "%",
+    "Percentage": pct + "%"
+  };
+
+  fetch('/api/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(res){
+     return res.json().then(function(data) {
+       if(!res.ok || !data.success) throw new Error(data.error || 'Sync failed');
+       return data;
+     });
+  })
+  .then(function(data) {
+    lsDel('cm_pending_sync');
+    showToast(data.message || 'Results emailed and synced successfully!', 'success');
+    updateSyncUI();
+  })
+  .catch(function(err) {
+    console.error(err);
+    showToast('Sync failed: ' + err.message, 'error');
+    if(sbtn) { sbtn.textContent = 'Sync Now'; sbtn.disabled = false; }
+    if(rsb) { rsb.textContent = 'Sync Now'; rsb.disabled = false; }
+  });
+}
+
+function syncPendingNow(){
+  closeModal('pending-sync-modal');
+  trySyncNow();
+}
+</script>
+</body>
+</html>
